@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jpsilvadev/gator/internal/database"
+	"github.com/jpsilvadev/gator/internal/rss"
 )
 
 func handlerRegister(s *state, cmd command) error {
@@ -99,5 +100,43 @@ func handlerUsers(s *state, cmd command) error {
 		}
 		fmt.Printf("* %v\n", u.Name)
 	}
+	return nil
+}
+
+func handlerAgg(s *state, cmd command) error {
+	if len(cmd.Args) != 0 {
+		return fmt.Errorf("usage: %s", cmd.Name)
+	}
+
+	rssFeed, err := rss.FetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	if err != nil {
+		return fmt.Errorf("failed to fetch feed: %v", err)
+	}
+	fmt.Println(rssFeed)
+	return nil
+}
+
+func handlerAddFeed(s *state, cmd command) error {
+	if len(cmd.Args) != 2 {
+		return fmt.Errorf("usage: %s <name> <url>", cmd.Name)
+	}
+
+	currentUser, err := s.db.GetUser(context.Background(), s.config.CurrentUserName)
+	if err != nil {
+		return fmt.Errorf("failed to get current user: %v", err)
+	}
+
+	feed, err := s.db.CreateFeed(context.Background(), database.CreateFeedParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name:      cmd.Args[0],
+		Url:       cmd.Args[1],
+		UserID:    currentUser.ID,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create feed: %v", err)
+	}
+	fmt.Println(feed)
 	return nil
 }

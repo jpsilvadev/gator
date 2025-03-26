@@ -8,12 +8,14 @@ import (
 
 	"github.com/jpsilvadev/gator/internal/config"
 	"github.com/jpsilvadev/gator/internal/database"
+	"github.com/jpsilvadev/gator/internal/rss"
 	_ "github.com/lib/pq" // Load the PostgreSQL driver
 )
 
 type state struct {
 	config *config.Config
 	db     *database.Queries
+	rss    *rss.RSSFeed
 }
 
 func main() {
@@ -42,6 +44,8 @@ func main() {
 	cmds.register("register", handlerRegister)
 	cmds.register("reset", handlerReset)
 	cmds.register("users", handlerUsers)
+	cmds.register("agg", handlerAgg)
+	cmds.register("addfeed", handlerAddFeed)
 
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: gator <command> [args]")
@@ -59,5 +63,4 @@ func main() {
 		fmt.Printf("Error executing %s: %v\n", cmd, err)
 		os.Exit(1)
 	}
-
 }
