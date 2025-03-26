@@ -1,14 +1,19 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/jpsilvadev/gator/internal/config"
+	"github.com/jpsilvadev/gator/internal/database"
+	_ "github.com/lib/pq" // Load the PostgreSQL driver
 )
 
 type state struct {
 	config *config.Config
+	db     *database.Queries
 }
 
 func main() {
@@ -18,14 +23,25 @@ func main() {
 		os.Exit(1)
 	}
 
+	db, err := sql.Open("postgres", cfg.DbURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	dbQueries := database.New(db)
 	gatorState := &state{
 		config: &cfg,
+		db:     dbQueries,
 	}
 
 	cmds := commands{
 		cmdToHandler: make(map[string]func(*state, command) error),
 	}
 	cmds.register("login", handlerLogin)
+	cmds.register("register", handlerRegister)
+	cmds.register("reset", handlerReset)
+	cmds.register("users", handlerUsers)
 
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: gator <command> [args]")
@@ -43,4 +59,5 @@ func main() {
 		fmt.Printf("Error executing %s: %v\n", cmd, err)
 		os.Exit(1)
 	}
+
 }

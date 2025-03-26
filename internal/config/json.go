@@ -55,7 +55,7 @@ func write(cfg Config) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(configPath, jsonData, 0666)
+	err = os.WriteFile(configPath, jsonData, 0600)
 	if err != nil {
 		return err
 	}
