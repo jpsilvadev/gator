@@ -11,6 +11,9 @@ RETURNING *;
 -- name: GetUser :one
 SELECT * FROM users WHERE name = $1;
 
+-- name: GetUserByID :one
+SELECT * FROM users WHERE id = $1;
+
 -- Drop users to reset the table and avoid manual reset
 -- name: ResetUsers :exec
 DELETE FROM users;
