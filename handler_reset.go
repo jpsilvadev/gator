@@ -11,6 +11,6 @@ func handlerReset(s *state, cmd command) error {
 	if err != nil {
 		return fmt.Errorf("could not delete users: %w", err)
 	}
-	log.Print("All users have been deleted from database")
+	log.Print("Database reset successfully!")
 	return nil
 }

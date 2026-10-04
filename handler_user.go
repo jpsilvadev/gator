@@ -61,6 +61,23 @@ func handlerLogin(s *state, cmd command) error {
 	return nil
 }
 
+func handlerUsers(s *state, cmd command) error {
+	users, err := s.db.GetUsers(context.Background())
+	if err != nil {
+		return fmt.Errorf("could not list users: %w", err)
+	}
+
+	for _, user := range users {
+		isCurrentUser := user.Name == s.cfg.CurrentUserName
+		fmt.Printf("* %s", user.Name)
+		if isCurrentUser {
+			fmt.Print(" (current)")
+		}
+		fmt.Println()
+	}
+	return nil
+}
+
 func logUserInfo(user database.User) {
 	log.Printf("User created:\n  ID: %s\n  CreatedAt: %s\n  UpdatedAt: %s\n  Name: %s\n",
 		user.ID, user.CreatedAt, user.UpdatedAt, user.Name)
