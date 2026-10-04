@@ -1,28 +1,40 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"os"
 
 	"github.com/jpsilvadev/gator/internal/config"
 )
 
 func main() {
-
 	cfg, err := config.Read()
 	if err != nil {
 		log.Fatalf("error reading config: %v", err)
 	}
-	fmt.Printf("Read config: %+v\n", cfg)
 
-	err = cfg.SetUser("jsilva")
-	if err != nil {
-		log.Fatalf("could not set current user: %v", err)
+	gatorState := &state{
+		cfg: &cfg,
 	}
 
-	cfg, err = config.Read()
-	if err != nil {
-		log.Fatalf("error reading config: %v", err)
+	cmds := commands{
+		registeredCommands: make(map[string]func(*state, command) error),
 	}
-	fmt.Printf("Read config again: %+v\n", cfg)
+	cmds.register("login", handlerLogin)
+
+	args := os.Args
+	if len(args) < 2 {
+		log.Fatal("Usage: cli <command> [args...]")
+	}
+
+	cmdName := args[1]
+	cmdArgs := args[2:]
+	cmd := command{
+		Name: cmdName,
+		Args: cmdArgs,
+	}
+	err = cmds.run(gatorState, cmd)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
