@@ -34,6 +34,8 @@ func handlerRegister(s *state, cmd command) error {
 
 	fmt.Println("User created successfully:")
 	logUserInfo(user)
+	fmt.Printf("User has been set to %s\n", user.Name)
+
 	return nil
 }
 
