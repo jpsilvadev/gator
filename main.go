@@ -49,6 +49,9 @@ func main() {
 	cmds.register("following", middlewareLoggedIn(handlerListFollowing))
 	cmds.register("unfollow", middlewareLoggedIn(handlerUnfollow))
 
+	// posts
+	cmds.register("browse", middlewareLoggedIn(handlerBrowse))
+
 	// reset db
 	cmds.register("reset", handlerReset)
 
