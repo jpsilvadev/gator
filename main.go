@@ -35,13 +35,21 @@ func main() {
 	cmds := commands{
 		registeredCommands: make(map[string]func(*state, command) error),
 	}
+
+	// users
 	cmds.register("login", handlerLogin)
 	cmds.register("register", handlerRegister)
 	cmds.register("users", handlerListUsers)
+
+	// feeds
 	cmds.register("agg", handlerAgg)
 	cmds.register("addfeed", handlerAddFeed)
-	cmds.register("reset", handlerReset)
 	cmds.register("feeds", handlerListFeeds)
+	cmds.register("follow", handlerFollowFeed)
+	cmds.register("following", handlerListFollowing)
+
+	// reset db
+	cmds.register("reset", handlerReset)
 
 	args := os.Args
 	if len(args) < 2 {
