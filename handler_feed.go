@@ -14,14 +14,7 @@ func handlerAddFeed(s *state, cmd command, user database.User) error {
 		return fmt.Errorf("usage: %s <name> <url>", cmd.Name)
 	}
 
-	name := s.cfg.CurrentUserName
-
-	user, err := s.db.GetUser(context.Background(), name)
-	if err != nil {
-		return err
-	}
-
-	name = cmd.Args[0]
+	name := cmd.Args[0]
 	url := cmd.Args[1]
 	feedParams := database.CreateFeedParams{
 		ID:        uuid.New(),
