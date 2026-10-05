@@ -2,9 +2,14 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
+	"strings"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/jpsilvadev/gator/internal/database"
 )
 
 func handlerAgg(s *state, cmd command) error {
@@ -43,10 +48,57 @@ func scrapeFeeds(s *state) error {
 		return fmt.Errorf("could not fetch feed: %w", err)
 	}
 
+	newPosts := 0
 	for _, item := range feed.Channel.Item {
-		fmt.Printf("Title: %s\n", item.Title)
-		fmt.Printf("Description:\n%s\n", item.Description)
+		postParams := database.CreatePostParams{
+			ID:          uuid.New(),
+			CreatedAt:   time.Now().UTC(),
+			UpdatedAt:   time.Now().UTC(),
+			Title:       item.Title,
+			Url:         item.Link,
+			Description: parseDescription(item.Description),
+			PublishedAt: parsePubDate(item.PubDate),
+			FeedID:      nextFeedFetch.ID,
+		}
+		_, err := s.db.CreatePost(context.Background(), postParams)
+		if err != nil {
+			if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
+				// duplicated posts are expected
+				// should not crash the scraper
+				continue
+			}
+			log.Printf("could not create post: %v", err)
+			continue
+		}
+		newPosts++
 	}
-	log.Printf("Feed %s collected, %v posts found", nextFeedFetch.Name, len(feed.Channel.Item))
+	log.Printf("Feed %s collected, %v posts found, %v new", nextFeedFetch.Name, len(feed.Channel.Item), newPosts)
 	return nil
+}
+
+// cast post description to nullable in case its empty
+func parseDescription(description string) sql.NullString {
+	parsedDescription := sql.NullString{
+		String: description,
+		Valid:  description != "",
+	}
+	return parsedDescription
+}
+
+// cast post publication date to nullable in case its empty
+func parsePubDate(pubDate string) sql.NullTime {
+	layouts := []string{
+		time.RFC1123Z,
+		time.RFC1123,
+		time.RFC3339,
+		// single-digit day variants, e.g. "Mon, 2 Jan 2006"
+		"Mon, 2 Jan 2006 15:04:05 -0700",
+		"Mon, 2 Jan 2006 15:04:05 MST",
+	}
+	for _, layout := range layouts {
+		if t, err := time.Parse(layout, pubDate); err == nil {
+			return sql.NullTime{Time: t.UTC(), Valid: true}
+		}
+	}
+	return sql.NullTime{Valid: false}
 }
