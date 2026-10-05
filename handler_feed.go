@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -36,12 +35,31 @@ func handlerAddFeed(s *state, cmd command) error {
 	if err != nil {
 		return fmt.Errorf("could not create feed: %w", err)
 	}
-
+	fmt.Println("Feed created:")
 	logFeedInfo(feed)
 	return nil
 }
 
+func handlerListFeeds(s *state, cmd command) error {
+	feeds, err := s.db.GetFeeds(context.Background())
+	if err != nil {
+		return fmt.Errorf("could not get feeds: %w", err)
+	}
+
+	for _, feed := range feeds {
+		user, err := s.db.GetUserInfoByID(context.Background(), feed.UserID)
+		if err != nil {
+			return fmt.Errorf("could not get user info: %w", err)
+		}
+		fmt.Printf("==== User: %s ====\n", user.Name)
+		logFeedInfo(feed)
+		fmt.Println("==================================================")
+
+	}
+	return nil
+}
+
 func logFeedInfo(feed database.Feed) {
-	log.Printf("Feed created:\n  ID: %s\n  CreatedAt: %s\n  UpdatedAt: %s\n  Name: %s\n  URL: %s\n  UserID: %s\n",
+	fmt.Printf("ID: %s\n  CreatedAt: %s\n  UpdatedAt: %s\n  Name: %s\n  URL: %s\n  UserID: %s\n",
 		feed.ID, feed.CreatedAt, feed.UpdatedAt, feed.Name, feed.Url, feed.UserID)
 }
