@@ -9,15 +9,9 @@ import (
 	"github.com/jpsilvadev/gator/internal/database"
 )
 
-func handlerFollowFeed(s *state, cmd command) error {
+func handlerFollowFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.Args) != 1 {
 		return fmt.Errorf("usage: %s <url>", cmd.Name)
-	}
-
-	// fetch user
-	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err != nil {
-		return fmt.Errorf("could not find user: %w", err)
 	}
 
 	// fetch feed
@@ -42,19 +36,13 @@ func handlerFollowFeed(s *state, cmd command) error {
 	return nil
 }
 
-func handlerListFollowing(s *state, cmd command) error {
-	name := s.cfg.CurrentUserName
-	user, err := s.db.GetUser(context.Background(), name)
-	if err != nil {
-		return fmt.Errorf("could not find user: %w", err)
-	}
-
+func handlerListFollowing(s *state, cmd command, user database.User) error {
 	feedFollows, err := s.db.GetFeedFollowsForUser(context.Background(), user.ID)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("User %v is following:\n", name)
+	fmt.Printf("User %v is following:\n", user.Name)
 	for _, feedFollow := range feedFollows {
 		fmt.Printf(" - %v\n", feedFollow.FeedName)
 	}
